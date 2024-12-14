@@ -1,7 +1,7 @@
 const chai = require('chai');
 const supertest = require('supertest');
 const app = require('../app');
-
+const sequelize = require('../models/index');
 const { expect } = chai;
 const request = supertest(app);
 
@@ -10,9 +10,10 @@ describe('Event API', () => {
 
   beforeEach(async () => {
     // Nettoyer la table avant chaque test
-    await request.delete('/events');
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0;');
+    await sequelize.models.Event.destroy({ where: {} });
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1;');
 
-    // Créer un événement de base
     const event = {
       name: 'Battle of Heroes',
       description: 'An epic battle between legendary heroes.',
@@ -89,10 +90,13 @@ describe('Event API', () => {
   });
 
   it('should fetch all events after deleting one', async () => {
+    // On supprime l'évènement créé par le beforeEach
     await request.delete(`/events/${createdEventId}`);
     const res = await request.get('/events');
+
+    // On s'attend à ce que la liste soit vide
     expect(res.status).to.equal(200);
     expect(res.body).to.be.an('array');
-    expect(res.body.length).to.equal(0); // On s'attend à n'avoir aucun événement
+    expect(res.body.length).to.equal(0);
   });
 });

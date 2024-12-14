@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('./index');
-const Character = require('./Character'); // Importez le modèle Character
+const Character = require('./Character');
 
 const Event = sequelize.define('Event', {
   id: {
@@ -21,7 +21,6 @@ const Event = sequelize.define('Event', {
   },
 });
 
-// Relation : Un événement peut concerner plusieurs personnages
 Event.belongsToMany(Character, { through: 'CharacterEvents', foreignKey: 'eventId' });
 
 module.exports = Event;

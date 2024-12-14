@@ -4,66 +4,62 @@ const router = express.Router();
 
 // Créer un personnage
 router.post('/', async (req, res) => {
-    try {
-      const character = await Character.create(req.body);
-      res.status(201).json(character);
-    } catch (error) {
-      if (error.name === 'SequelizeValidationError') {
-        return res.status(400).json({ error: error.message });
-      }
-      res.status(500).json({ error: error.message });
+  try {
+    const character = await Character.create(req.body);
+    res.status(201).json(character);
+  } catch (error) {
+    if (error.name === 'SequelizeValidationError') {
+      return res.status(400).json({ error: error.errors.map(e => e.message) });
     }
-  });
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// Lire tous les personnages
-/*router.get('/', async (req, res) => {
+// Récupérer tous les personnages
+router.get('/', async (req, res) => {
   try {
     const characters = await Character.findAll();
     res.status(200).json(characters);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});*/
-// Récupérer tous les personnages
-router.get('/', async (req, res) => {
-  try {
-    const characters = await Character.findAll();
-    res.status(200).json(characters); // Retourner tous les personnages
-  } catch (error) {
-    res.status(500).json({ error: error.message }); // Gestion des erreurs
-  }
 });
 
-// Récupérer un personnage par son ID
+// Récupérer un personnage par ID
 router.get('/:id', async (req, res) => {
   try {
-    const id = req.params.id; // Récupérer l'ID depuis les paramètres de l'URL
-    const character = await Character.findByPk(id); // Utiliser Sequelize pour trouver le personnage
+    const id = req.params.id;
+    const character = await Character.findByPk(id);
 
     if (!character) {
-      return res.status(404).json({ error: 'Character not found' }); // Si le personnage n'existe pas
+      return res.status(404).json({ error: 'Character not found' });
     }
 
-    res.status(200).json(character); // Retourner les infos du personnage
+    res.status(200).json(character);
   } catch (error) {
-    res.status(500).json({ error: error.message }); // Gestion des erreurs
+    res.status(500).json({ error: error.message });
   }
 });
 
-
-  
-  
-
-// Modifier un personnage
+// Mettre à jour un personnage
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const [updated] = await Character.update(req.body, { where: { id } });
-    if (updated) {
-      const updatedCharacter = await Character.findOne({ where: { id } });
-      res.status(200).json(updatedCharacter);
-    } else {
-      res.status(404).json({ error: 'Character not found' });
+    const character = await Character.findByPk(id);
+
+    if (!character) {
+      return res.status(404).json({ error: 'Character not found' });
+    }
+
+    // On utilise la méthode update sur l'instance pour capturer les erreurs de validation
+    try {
+      await character.update(req.body);
+      res.status(200).json(character);
+    } catch (updateError) {
+      if (updateError.name === 'SequelizeValidationError') {
+        return res.status(400).json({ error: updateError.errors.map(e => e.message) });
+      }
+      throw updateError;
     }
   } catch (error) {
     res.status(500).json({ error: error.message });

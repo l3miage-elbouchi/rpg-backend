@@ -57,8 +57,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const sequelize = require('./models'); // Assurez-vous que ceci pointe bien vers votre instance Sequelize
-
+const sequelize = require('./models'); // Pointe vers index.js
 const characterRoutes = require('./routes/characterRoutes');
 const itemRoutes = require('./routes/itemRoutes');
 const eventRoutes = require('./routes/eventRoutes');
@@ -85,7 +84,7 @@ const isTestEnv = process.env.NODE_ENV === 'test';
 
 // Synchronisation de la base de données
 sequelize
-  .sync({ force: isTestEnv }) // Force = true en test pour être sûr d'avoir une base vide
+  .sync({ force: isTestEnv })
   .then(() => {
     console.log('Database tables created!');
   })
@@ -101,3 +100,4 @@ if (require.main === module) {
 }
 
 module.exports = app;
+

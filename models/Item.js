@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('./index');
-const Character = require('./Character'); // Importez le modèle Character
+const Character = require('./Character');
 
 const Item = sequelize.define('Item', {
   id: {
@@ -13,7 +13,7 @@ const Item = sequelize.define('Item', {
     allowNull: false,
   },
   type: {
-    type: DataTypes.STRING, // Ex : weapon, armor, potion
+    type: DataTypes.STRING,
     allowNull: false,
   },
   value: {
@@ -22,7 +22,6 @@ const Item = sequelize.define('Item', {
   },
 });
 
-// Relation : Un objet appartient à un personnage
-Item.belongsTo(Character, { foreignKey: 'characterId' });
+Item.belongsTo(Character, { foreignKey: 'characterId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
 module.exports = Item;
