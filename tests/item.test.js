@@ -63,4 +63,26 @@ describe('Item API', () => {
     const res = await request.delete(`/items/${createdItemId}`);
     expect(res.status).to.equal(204);
   });
+
+
+  it('should return an error if characterId does not exist when creating an item', async () => {
+    const item = { name: 'Bow', type: 'weapon', value: 100, characterId: 99999 };
+    const res = await request.post('/items').send(item);
+    // 400 ou 404
+    expect([400, 404]).to.include(res.status);
+    expect(res.body.error).to.exist;
+  });
+
+  it('should return 400 if updating an item with invalid value', async () => {
+    // Recréation d’un nouvel item valide
+    const newItem = { name: 'Dagger', type: 'weapon', value: 50, characterId: characterId };
+    const createRes = await request.post('/items').send(newItem);
+    const newItemId = createRes.body.id;
+    expect(createRes.status).to.equal(201);
+
+    // Mise à jour invalide
+    const res = await request.put(`/items/${newItemId}`).send({ value: -10 });
+    expect(res.status).to.equal(400);
+    expect(res.body.error).to.exist;
+  });
 });

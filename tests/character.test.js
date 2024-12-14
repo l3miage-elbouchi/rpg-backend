@@ -1,7 +1,7 @@
 const chai = require('chai');
 const supertest = require('supertest');
 const app = require('../app');
-const sequelize = require('../models/index'); // Assurez-vous que ceci importe votre instance Sequelize
+const sequelize = require('../models/index');
 const Character = require('../models/Character');
 const Item = require('../models/Item');
 
@@ -137,5 +137,60 @@ describe('Character API - Comprehensive Tests', () => {
     const res = await request.post('/characters').send(invalidCharacter);
     expect(res.status).to.equal(400);
     expect(res.body).to.have.property('error');
+  });
+
+
+
+  it('should return 400 if required fields are missing', async () => {
+    const characterWithoutName = { health: 100, strength: 20, defense: 10 };
+    const res = await request.post('/characters').send(characterWithoutName);
+    expect(res.status).to.equal(400);
+    expect(res.body.error).to.exist;
+  });
+
+  it('should return 400 if health exceeds the maximum allowed value', async () => {
+    const invalidCharacter = { name: 'OverMax', health: 501, strength: 20, defense: 10 };
+    const res = await request.post('/characters').send(invalidCharacter);
+    expect(res.status).to.equal(400);
+    expect(res.body.error).to.include('Health must not exceed 500');
+  });
+
+  it('should partially update a character', async () => {
+    const originalCharacter = await request.get(`/characters/${createdCharacterId}`);
+    const originalData = originalCharacter.body;
+
+    const res = await request.put(`/characters/${createdCharacterId}`).send({ health: 200 });
+    expect(res.status).to.equal(200);
+    expect(res.body.health).to.equal(200);
+    // Vérifier que le nom n’a pas changé
+    expect(res.body.name).to.equal(originalData.name);
+  });
+
+  it('should return 404 when deleting a non-existent character', async () => {
+    const res = await request.delete('/characters/999999');
+    expect(res.status).to.equal(404);
+    expect(res.body.error).to.equal('Character not found');
+  });
+
+  it('should return an empty array if no characters exist', async () => {
+    // On supprime le personnage créé par le beforeEach
+    await request.delete(`/characters/${createdCharacterId}`);
+    const res = await request.get('/characters');
+    expect(res.status).to.equal(200);
+    expect(res.body).to.be.an('array');
+    expect(res.body.length).to.equal(0);
+  });
+
+  it('should return a clear error message for invalid character data', async () => {
+    const invalidCharacter = { name: 'Ab', health: -1, strength: 0, defense: 0 };
+    const res = await request.post('/characters').send(invalidCharacter);
+    expect(res.status).to.equal(400);
+    expect(res.body.error).to.be.an('array');
+    // On s’assure que chaque message d’erreur attendu est présent :
+    const errorMessages = res.body.error.join(' ');
+    expect(errorMessages).to.include('Name must be at least 3 characters long');
+    expect(errorMessages).to.include('Health must be positive');
+    expect(errorMessages).to.include('Strength must be positive');
+    expect(errorMessages).to.include('Defense must be positive');
   });
 });

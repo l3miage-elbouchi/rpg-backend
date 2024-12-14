@@ -90,13 +90,21 @@ describe('Event API', () => {
   });
 
   it('should fetch all events after deleting one', async () => {
-    // On supprime l'évènement créé par le beforeEach
     await request.delete(`/events/${createdEventId}`);
     const res = await request.get('/events');
-
-    // On s'attend à ce que la liste soit vide
     expect(res.status).to.equal(200);
     expect(res.body).to.be.an('array');
     expect(res.body.length).to.equal(0);
   });
+
+  // it('should return 400 if event date is in the past', async () => {
+  //   const pastEvent = {
+  //     name: 'PastEvent',
+  //     description: 'Happened in the past',
+  //     date: '2000-01-01'
+  //   };
+  //   const res = await request.post('/events').send(pastEvent);
+  //   expect(res.status).to.equal(400);
+  //   expect(res.body.error).to.include('Event date cannot be in the past');
+  // });
 });
